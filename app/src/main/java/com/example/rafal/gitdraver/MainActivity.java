@@ -2,6 +2,7 @@ package com.example.rafal.gitdraver;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -23,7 +24,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -40,7 +40,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        iv = (ImageView) findViewById(R.id.imageView);
+        //iv = (ImageView) findViewById(R.id.imageView);
         v = findViewById(R.id.view);
 
 
@@ -51,7 +51,7 @@ public class MainActivity extends Activity {
 
             File imgFile = new  File(path);
 
-            if(imgFile.exists()){
+            //if(imgFile.exists()){
 
                 Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
 
@@ -59,13 +59,38 @@ public class MainActivity extends Activity {
 
                 myImage.setImageBitmap(myBitmap);
 
-            }
+           // }
 
         }
     }
 
     private static final String key ="key";
 
+void share()
+{
+
+    Intent share = new Intent(Intent.ACTION_SEND);
+    share.setType("image/png");
+
+    ContentValues values = new ContentValues();
+    values.put(Images.Media.TITLE, "title");
+    values.put(Images.Media.MIME_TYPE, "image/PNG");
+    Uri uri = getContentResolver().insert(Media.EXTERNAL_CONTENT_URI,
+            values);
+
+
+    OutputStream outstream;
+    try {
+        outstream = getContentResolver().openOutputStream(uri);
+        imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, outstream);
+        outstream.close();
+    } catch (Exception e) {
+        System.err.println(e.toString());
+    }
+
+    share.putExtra(Intent.EXTRA_STREAM, uri);
+    startActivity(Intent.createChooser(share, "Share Image"));
+}
 
 //
 //    private File savebitmap(String filename) {
@@ -94,27 +119,27 @@ public class MainActivity extends Activity {
 //
 //    }
 
-    private void save() {
-        if (imageBitmap != null) {
-
-            FileOutputStream out = null;
-            try {
-                out = new FileOutputStream(path);
-                imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
-                // PNG is a lossless format, the compression factor (100) is ignored
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    if (out != null) {
-                        out.close();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
+//    private void save() {
+//        if (imageBitmap != null) {
+//
+//            FileOutputStream out = null;
+//            try {
+//                out = new FileOutputStream(path);
+//                imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
+//                // PNG is a lossless format, the compression factor (100) is ignored
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            } finally {
+//                try {
+//                    if (out != null) {
+//                        out.close();
+//                    }
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//    }
 
     String path = "GitPhoto.png";
 
@@ -194,9 +219,9 @@ public class MainActivity extends Activity {
             {
                 Bundle extras = data.getExtras();
                 imageBitmap = (Bitmap)extras.get("data");
-                ImageView imageView = (ImageView)findViewById(R.id.imageView);
-                imageView.setImageBitmap(imageBitmap);
-                save();
+                //ImageView imageView = (ImageView)findViewById(R.id.imageView);
+                //imageView.setImageBitmap(imageBitmap);
+                //save();
             }else
             {
                 Toast.makeText(this,"Ups...",Toast.LENGTH_SHORT).show();
