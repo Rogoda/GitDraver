@@ -26,6 +26,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -36,13 +37,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.StreamCorruptedException;
 
 public class MainActivity extends Activity {
 
     ImageView iv;
     View v;
     private static final String TAG = MainActivity.class.getName();
-    private static final String FILENAME = "myFile.txt";
+    private static final String FILENAME = "myFile.png";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,10 +57,37 @@ public class MainActivity extends Activity {
         if(imageBitmap != null)iv.setImageBitmap(imageBitmap);
 
     }
+   static File file = null;
+  public void share(View v) {
+
+        if(imageBitmap !=null) {
+
+
+            file = getFileStreamPath(FILENAME);
+            if(file != null) {
+
+                 //String path = Environment.getExternalAppStoragePath(this, "attatchment.html");
+
+                //String path = Environment.getExternalStorageDirectory().getPath()
+
+                Intent intent = new Intent(Intent.ACTION_SEND);
+                intent.setType("image/png");
+                intent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Share file");
+                intent.putExtra(Intent.EXTRA_TEXT, file.getAbsolutePath());
+
+                intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+                startActivity(Intent.createChooser(intent , "Share"));
+            }
+        }else {
+            toast("Nie zrobiono zdjęcia");
+        }
+
+    }
+
 
     private void writeToFile() {
         try {
-            ObjectOutputStream outputStreamWriter = new ObjectOutputStream(openFileOutput(FILENAME, Context.MODE_PRIVATE));
+            ObjectOutputStream outputStreamWriter = new ObjectOutputStream(openFileOutput(FILENAME, Context.BIND_AUTO_CREATE));
             imageBitmap.compress(Bitmap.CompressFormat.PNG,100, outputStreamWriter);
             outputStreamWriter.close();
             imageBitmap = null;
@@ -75,6 +104,7 @@ public class MainActivity extends Activity {
 
             imageBitmap = BitmapFactory.decodeStream(isteram);
 
+        isteram.close();
             iv.setImageBitmap(imageBitmap);
     }
 
@@ -112,9 +142,7 @@ public class MainActivity extends Activity {
 
     }
 
-
-
-static Bitmap imageBitmap = null;
+    static Bitmap imageBitmap = null;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
