@@ -24,163 +24,69 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-
+import java.io.OutputStreamWriter;
 
 public class MainActivity extends Activity {
 
     ImageView iv;
     View v;
+    private static final String TAG = MainActivity.class.getName();
+    private static final String FILENAME = "myFile.txt";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //iv = (ImageView) findViewById(R.id.imageView);
         v = findViewById(R.id.view);
+        iv = (ImageView) findViewById(R.id.imageView);
 
+        if(imageBitmap != null)iv.setImageBitmap(imageBitmap);
 
+    }
 
-        if(photo) {
-//            ImageView imageView = (ImageView) findViewById(R.id.imageView);
-//            imageView.setImageBitmap(imageBitmap);
-
-            File imgFile = new  File(path);
-
-            //if(imgFile.exists()){
-
-                Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
-
-                ImageView myImage = (ImageView) findViewById(R.id.imageView);
-
-                myImage.setImageBitmap(myBitmap);
-
-           // }
-
+    private void writeToFile() {
+        try {
+            ObjectOutputStream outputStreamWriter = new ObjectOutputStream(openFileOutput(FILENAME, Context.MODE_PRIVATE));
+            imageBitmap.compress(Bitmap.CompressFormat.PNG,100, outputStreamWriter);
+            outputStreamWriter.close();
+            imageBitmap = null;
         }
+        catch (IOException e) {
+            Log.e(TAG, "File write failed: " + e.toString());
+        }
+
     }
 
-    private static final String key ="key";
+    private void readFromFile() throws IOException {
 
-void share()
-{
+        ObjectInputStream isteram = new ObjectInputStream(openFileInput(FILENAME));
 
-    Intent share = new Intent(Intent.ACTION_SEND);
-    share.setType("image/png");
+            imageBitmap = BitmapFactory.decodeStream(isteram);
 
-    ContentValues values = new ContentValues();
-    values.put(Images.Media.TITLE, "title");
-    values.put(Images.Media.MIME_TYPE, "image/PNG");
-    Uri uri = getContentResolver().insert(Media.EXTERNAL_CONTENT_URI,
-            values);
-
-
-    OutputStream outstream;
-    try {
-        outstream = getContentResolver().openOutputStream(uri);
-        imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, outstream);
-        outstream.close();
-    } catch (Exception e) {
-        System.err.println(e.toString());
+            iv.setImageBitmap(imageBitmap);
     }
 
-    share.putExtra(Intent.EXTRA_STREAM, uri);
-    startActivity(Intent.createChooser(share, "Share Image"));
-}
-
-//
-//    private File savebitmap(String filename) {
-//        String extStorageDirectory = Environment.getExternalStorageDirectory().toString();
-//        OutputStream outStream = null;
-//
-//        File file = new File(filename + ".png");
-//        if (file.exists()) {
-//            file.delete();
-//            file = new File(extStorageDirectory, filename + ".png");
-//            Log.e("file exist", "" + file + ",Bitmap= " + filename);
-//        }
-//        try {
-//            // make a new bitmap from your file
-//            Bitmap bitmap = BitmapFactory.decodeFile(file.getName());
-//
-//            outStream = new FileOutputStream(file);
-//            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outStream);
-//            outStream.flush();
-//            outStream.close();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        Log.e("file", "" + file);
-//        return file;
-//
-//    }
-
-//    private void save() {
-//        if (imageBitmap != null) {
-//
-//            FileOutputStream out = null;
-//            try {
-//                out = new FileOutputStream(path);
-//                imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
-//                // PNG is a lossless format, the compression factor (100) is ignored
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            } finally {
-//                try {
-//                    if (out != null) {
-//                        out.close();
-//                    }
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }
-//    }
-
-    String path = "GitPhoto.png";
-
-    public void share(View v) {
-
-
-        if (imageBitmap != null) {
-
-            File file = new File(path);
-
-        Intent sharingIntent = new Intent(Intent.ACTION_SEND);
-        Uri screenshotUri = Uri.parse(path);
-        sharingIntent.setType("image/png");
-        sharingIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
-        startActivity(Intent.createChooser(sharingIntent, "Share image using"));
+    private void toast(String messange) {
+        Toast.makeText(getApplicationContext(), messange, Toast.LENGTH_SHORT).show();
     }
-        else
-        toast("Nie zrobiono zdjęcia");
-    }
-
-    private void toast(String messange)
-    {
-        Toast.makeText(getApplicationContext(),messange,Toast.LENGTH_SHORT).show();
-    }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
-    }
-
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-
-        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            //to sie dzieje w orientacji poziomej
-        }
-
-
     }
 
     @Override
@@ -198,33 +104,36 @@ void share()
         return super.onOptionsItemSelected(item);
     }
 
-    static boolean photo = false;
-
     static final int REQUEST_IMAGE_CAPTURE = 1;
-    public void ClickOn(View v)
-    {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        startActivityForResult(intent,REQUEST_IMAGE_CAPTURE);
 
-        photo = true;
+    public void ClickOn(View v) {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
+
     }
 
-    static Bitmap imageBitmap;
+
+
+static Bitmap imageBitmap = null;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == REQUEST_IMAGE_CAPTURE)
-        {
-            if(resultCode == RESULT_OK)
-            {
+        if (requestCode == REQUEST_IMAGE_CAPTURE) {
+            if (resultCode == RESULT_OK) {
                 Bundle extras = data.getExtras();
-                imageBitmap = (Bitmap)extras.get("data");
+                imageBitmap = (Bitmap) extras.get("data");
                 //ImageView imageView = (ImageView)findViewById(R.id.imageView);
                 //imageView.setImageBitmap(imageBitmap);
-                //save();
-            }else
-            {
-                Toast.makeText(this,"Ups...",Toast.LENGTH_SHORT).show();
+
+                writeToFile();
+                try {
+                    readFromFile();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            } else {
+                Toast.makeText(this, "Ups...", Toast.LENGTH_SHORT).show();
             }
         }
     }
