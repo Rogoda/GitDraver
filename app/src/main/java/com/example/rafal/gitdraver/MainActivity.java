@@ -28,6 +28,7 @@ import android.widget.Toast;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -44,7 +45,7 @@ public class MainActivity extends Activity {
     ImageView iv;
     View v;
     private static final String TAG = MainActivity.class.getName();
-    private static final String FILENAME = "myFile.png";
+    private static final String FILENAME = Environment.getExternalStorageDirectory().getPath()+File.separator+"GitDraver"+File.separator+"myFile.jpeg";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,20 +64,22 @@ public class MainActivity extends Activity {
         if(imageBitmap !=null) {
 
 
-            file = getFileStreamPath(FILENAME);
+            //file = getFileStreamPath(FILENAME);
             if(file != null) {
 
-                 //String path = Environment.getExternalAppStoragePath(this, "attatchment.html");
+                file.setReadable(true,false);
+                        //String path = Environment.getExternalAppStoragePath(this, "attatchment.html");
 
-                //String path = Environment.getExternalStorageDirectory().getPath()
+                //String path = Environment.getExternalStorageDirectory().getPath();
 
                 Intent intent = new Intent(Intent.ACTION_SEND);
-                intent.setType("image/png");
+                intent.setType("image/jpeg");
                 intent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Share file");
                 intent.putExtra(Intent.EXTRA_TEXT, file.getAbsolutePath());
 
                 intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
                 startActivity(Intent.createChooser(intent , "Share"));
+
             }
         }else {
             toast("Nie zrobiono zdjęcia");
@@ -86,27 +89,60 @@ public class MainActivity extends Activity {
 
 
     private void writeToFile() {
+
+
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        imageBitmap.compress(Bitmap.CompressFormat.JPEG,100, bytes);
+
+//you can create a new file name "test.jpg" in sdcard folder.
+      //  File f = new File(Environment.getExternalStorageDirectory()+ File.separator + "test.jpg")
+
+         file = new File(FILENAME);
+
         try {
-            ObjectOutputStream outputStreamWriter = new ObjectOutputStream(openFileOutput(FILENAME, Context.BIND_AUTO_CREATE));
-            imageBitmap.compress(Bitmap.CompressFormat.PNG,100, outputStreamWriter);
-            outputStreamWriter.close();
-            imageBitmap = null;
+            file.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+//write the bytes in file
+        FileOutputStream fo = null;
+        try {
+            fo = new FileOutputStream(file);
+
+            fo.write(bytes.toByteArray());
+            fo.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        catch (IOException e) {
-            e.printStackTrace();
-            //Log.e(TAG, "File write failed: " + e.toString());
-        }
+// remember close de FileOutput
+
+
+//
+//        try {
+//            ObjectOutputStream outputStreamWriter = new ObjectOutputStream(openFileOutput(FILENAME, Context.BIND_AUTO_CREATE));
+//            imageBitmap.compress(Bitmap.CompressFormat.PNG,100, outputStreamWriter);
+//            outputStreamWriter.close();
+//            imageBitmap = null;
+//        }
+//
+//        catch (IOException e) {
+//            e.printStackTrace();
+//            //Log.e(TAG, "File write failed: " + e.toString());
+//        }
 
     }
 
     private void readFromFile() throws IOException {
-        ObjectInputStream isteram = new ObjectInputStream(openFileInput(FILENAME));
+//        ObjectInputStream isteram = new ObjectInputStream(openFileInput(FILENAME));
+            FileInputStream isteram = new FileInputStream(FILENAME);
 
             imageBitmap = BitmapFactory.decodeStream(isteram);
 
         isteram.close();
             iv.setImageBitmap(imageBitmap);
+
+
     }
 
     private void toast(String messange) {
@@ -151,8 +187,8 @@ public class MainActivity extends Activity {
             if (resultCode == RESULT_OK) {
                 Bundle extras = data.getExtras();
                 imageBitmap = (Bitmap) extras.get("data");
-                //ImageView imageView = (ImageView)findViewById(R.id.imageView);
-                //imageView.setImageBitmap(imageBitmap);
+                ImageView imageView = (ImageView)findViewById(R.id.imageView);
+                imageView.setImageBitmap(imageBitmap);
 
                 writeToFile();
                 try {
