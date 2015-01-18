@@ -92,14 +92,15 @@ public class MainActivity extends Activity {
             outputStreamWriter.close();
             imageBitmap = null;
         }
+
         catch (IOException e) {
-            Log.e(TAG, "File write failed: " + e.toString());
+            e.printStackTrace();
+            //Log.e(TAG, "File write failed: " + e.toString());
         }
 
     }
 
     private void readFromFile() throws IOException {
-
         ObjectInputStream isteram = new ObjectInputStream(openFileInput(FILENAME));
 
             imageBitmap = BitmapFactory.decodeStream(isteram);
